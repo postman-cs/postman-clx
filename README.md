@@ -2,7 +2,9 @@
 
 ![Demo](demo.gif)
 
-Drop-in replacement for Postman CLI that adds useful governance reporting. Add `-r json` or `-r html` to any lint command for detailed analysis beyond standard CLI output. Runnable on single specs or entire directories and workspaces for comprehensive multi-API reporting (the HTML reports are pretty, too).
+Drop-in replacement for Postman CLI that adds useful governance reporting. Add `-r json` or `-r html` to any lint command for detailed analysis beyond standard CLI output. 
+
+Runnable on single specs or entire directories and workspaces for comprehensive multi-API reporting (the HTML reports are pretty, too).
 
 Adapted from the ADO Pipelines and Github Actions Workflows [here](https://github.com/postman-cs/governance-demo), now just natively integrated.
 
