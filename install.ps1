@@ -7,6 +7,7 @@ param(
 
 # Configuration
 $REPO = "postman-cs/postman-clx"
+$ARCHIVE_NAME = "pm-clx-win64.zip"
 $BINARY_NAME = "pm-clx-win64.exe"
 $INSTALL_NAME = "postman-clx.exe"
 
@@ -45,17 +46,31 @@ try {
     $INSTALL_PATH = "$Env:USERPROFILE\AppData\Local\Microsoft\WindowsApps"
     New-Item -type directory -path "$INSTALL_PATH" -Force | Out-Null
 
-    # Download binary
-    $downloadUrl = "https://github.com/$REPO/releases/download/$version/$BINARY_NAME"
-    $downloadPath = "$INSTALL_PATH\$BINARY_NAME"
+    # Download archive
+    $downloadUrl = "https://github.com/$REPO/releases/download/$version/$ARCHIVE_NAME"
+    $tempPath = "$env:TEMP\$ARCHIVE_NAME"
 
     Write-Host "Downloading from $downloadUrl..."
     $client = New-Object System.Net.WebClient
-    $client.DownloadFile($downloadUrl, $downloadPath)
+    $client.DownloadFile($downloadUrl, $tempPath)
 
     # Verify download
-    if (-not (Test-Path $downloadPath) -or (Get-Item $downloadPath).Length -eq 0) {
+    if (-not (Test-Path $tempPath) -or (Get-Item $tempPath).Length -eq 0) {
         throw "Downloaded file is empty or missing"
+    }
+
+    # Extract archive
+    Write-Host "Extracting archive..."
+    $extractPath = "$env:TEMP\pm-clx-extract"
+    if (Test-Path $extractPath) {
+        Remove-Item $extractPath -Recurse -Force
+    }
+    Expand-Archive $tempPath $extractPath -Force
+
+    # Verify extracted binary
+    $extractedBinary = "$extractPath\$BINARY_NAME"
+    if (-not (Test-Path $extractedBinary)) {
+        throw "Binary $BINARY_NAME not found in extracted archive"
     }
 
     # Install binary (rename to final name)
@@ -65,7 +80,11 @@ try {
         Move-Item $finalPath "$finalPath.backup" -Force
     }
 
-    Move-Item $downloadPath $finalPath -Force
+    Move-Item $extractedBinary $finalPath -Force
+
+    # Cleanup
+    Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+    Remove-Item $extractPath -Recurse -Force -ErrorAction SilentlyContinue
 
     # Verify installation
     Write-Host "Verifying installation..."

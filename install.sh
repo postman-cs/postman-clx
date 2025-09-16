@@ -121,7 +121,20 @@ detect_platform() {
     echo "${os_type}_${arch_type}"
 }
 
-# Function to get binary name based on platform
+# Function to get compressed archive name based on platform
+get_archive_name() {
+    local platform="$1"
+    case "$platform" in
+        linux_amd64)    echo "pm-clx-linux64.tar.gz" ;;
+        macos_amd64)    echo "pm-clx-osx_64.zip" ;;
+        macos_arm64)    echo "pm-clx-osx_arm64.zip" ;;
+        *)
+            report_crash "Unsupported platform: $platform"
+            ;;
+    esac
+}
+
+# Function to get binary name from archive
 get_binary_name() {
     local platform="$1"
     case "$platform" in
@@ -155,8 +168,9 @@ get_latest_version() {
 # Function to install on Unix-like systems (Linux/macOS)
 install_unix() {
     local platform="$1"
-    local binary_name="$2"
-    local version="$3"
+    local archive_name="$2"
+    local binary_name="$3"
+    local version="$4"
 
     print_info "Installing Enhanced Postman CLI (pm-clx) for $platform..."
 
@@ -174,26 +188,57 @@ install_unix() {
     trap cleanup EXIT
 
     # Build download URL
-    local url="https://github.com/$REPO/releases/download/$version/$binary_name"
+    local url="https://github.com/$REPO/releases/download/$version/$archive_name"
     print_info "Downloading from $url..."
 
-    # Download the binary
-    local binary_file="$tmp_dir/$binary_name"
+    # Download the archive
+    local archive_file="$tmp_dir/$archive_name"
 
     # Try curl first, then wget
     if command -v curl >/dev/null 2>&1; then
         # Always show download progress
-        curl --location --retry 10 --output "$binary_file" "$url" || report_crash "Failed to download pm-clx binary"
+        curl --location --retry 10 --output "$archive_file" "$url" || report_crash "Failed to download pm-clx archive"
     elif command -v wget >/dev/null 2>&1; then
         # Always show download progress
-        wget --output-document "$binary_file" "$url" || report_crash "Failed to download pm-clx binary"
+        wget --output-document "$archive_file" "$url" || report_crash "Failed to download pm-clx archive"
     else
         report_crash "You need either cURL or wget installed on your system"
     fi
 
     # Verify download
-    if [ ! -f "$binary_file" ] || [ ! -s "$binary_file" ]; then
+    if [ ! -f "$archive_file" ] || [ ! -s "$archive_file" ]; then
         report_crash "Downloaded file is empty or missing"
+    fi
+
+    print_info "Extracting archive..."
+
+    # Extract based on file type
+    case "$archive_name" in
+        *.tar.gz)
+            tar --directory "$tmp_dir" --extract --file "$archive_file" || report_crash "Failed to extract tar.gz archive"
+            ;;
+        *.zip)
+            if command -v ditto >/dev/null 2>&1; then
+                ditto -x -k "$archive_file" "$tmp_dir" || report_crash "Failed to extract zip archive with ditto"
+            elif command -v unzip >/dev/null 2>&1; then
+                if [ "$VERBOSE" = true ]; then
+                    unzip "$archive_file" -d "$tmp_dir" || report_crash "Failed to extract zip archive with unzip"
+                else
+                    unzip -q "$archive_file" -d "$tmp_dir" || report_crash "Failed to extract zip archive with unzip"
+                fi
+            else
+                report_crash "unzip or ditto is required for zip file extraction"
+            fi
+            ;;
+        *)
+            report_crash "Unsupported archive format: $archive_name"
+            ;;
+    esac
+
+    # Verify extracted binary exists
+    local binary_file="$tmp_dir/$binary_name"
+    if [ ! -f "$binary_file" ]; then
+        report_crash "Binary $binary_name not found in extracted archive"
     fi
 
     # Check if we need sudo
@@ -259,7 +304,9 @@ main() {
     platform=$(detect_platform)
     print_info "Detected platform: $platform"
 
-    # Get binary name for platform
+    # Get archive and binary names for platform
+    local archive_name
+    archive_name=$(get_archive_name "$platform")
     local binary_name
     binary_name=$(get_binary_name "$platform")
 
@@ -269,7 +316,7 @@ main() {
     print_info "Latest version: $version"
 
     # Install binary
-    install_unix "$platform" "$binary_name" "$version"
+    install_unix "$platform" "$archive_name" "$binary_name" "$version"
 
     # Always show success message if no system error occurred
     if [ -z "$SYSTEM_ERROR" ]; then
