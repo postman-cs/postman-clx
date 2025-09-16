@@ -138,15 +138,20 @@ class PostmanGovernanceWrapper {
                     args: ['--type', 'spec', '--workspace', workspace, '-r', reportFormat]
                 };
             } else {
-                const specTarget = args.find(arg => !arg.startsWith('-') &&
+                // spec lint only works with spec IDs, not local files
+                const specId = args.find(arg => !arg.startsWith('-') &&
                     arg !== 'spec' && arg !== 'lint' && arg !== reportFormat);
-                if (specTarget && specTarget.includes('.')) {
-                    return null;
+                if (specId) {
+                    return {
+                        script: this.unifiedScript,
+                        args: ['--type', 'spec', '--spec', specId, '-r', reportFormat]
+                    };
+                } else {
+                    return {
+                        script: this.unifiedScript,
+                        args: ['--type', 'spec', '-r', reportFormat]
+                    };
                 }
-                return {
-                    script: this.unifiedScript,
-                    args: specTarget ? ['--type', 'spec', '--spec', specTarget, '-r', reportFormat] : ['--type', 'spec', '-r', reportFormat]
-                };
             }
         } else {
             if (hasWorkspace) {
@@ -159,17 +164,30 @@ class PostmanGovernanceWrapper {
             } else if (hasDirectory) {
                 const dirIndex = args.indexOf('-d') + 1;
                 const directory = args[dirIndex];
+                // Resolve to absolute path to ensure unified.js can find the directory
+                const userWorkingDir = process.env.USER_WORKING_DIR || process.cwd();
+                const absoluteDir = path.resolve(userWorkingDir, directory);
                 return {
                     script: this.unifiedScript,
-                    args: ['--type', 'local', '--dir', directory, '-r', reportFormat]
+                    args: ['--type', 'local', '--dir', absoluteDir, '-r', reportFormat]
                 };
             } else {
                 const apiTarget = args.find(arg => !arg.startsWith('-') &&
                     arg !== 'api' && arg !== 'lint' && arg !== reportFormat);
-                return {
-                    script: this.unifiedScript,
-                    args: apiTarget ? ['--type', 'local', '--api', apiTarget, '-r', reportFormat] : ['--type', 'local', '-r', reportFormat]
-                };
+                if (apiTarget) {
+                    // Resolve to absolute path to ensure unified.js can find the file
+                    const userWorkingDir = process.env.USER_WORKING_DIR || process.cwd();
+                    const absolutePath = path.resolve(userWorkingDir, apiTarget);
+                    return {
+                        script: this.unifiedScript,
+                        args: ['--type', 'local', '--api', absolutePath, '-r', reportFormat]
+                    };
+                } else {
+                    return {
+                        script: this.unifiedScript,
+                        args: ['--type', 'local', '-r', reportFormat]
+                    };
+                }
             }
         }
     }
@@ -185,11 +203,18 @@ class PostmanGovernanceWrapper {
                 // Skip both -r and the format
                 i++; // Skip the format argument too
             } else {
-                filteredArgs.push(args[i]);
+                let arg = args[i];
+                // Resolve file paths to absolute paths for the original CLI
+                if (!arg.startsWith('-') && arg !== 'api' && arg !== 'spec' && arg !== 'lint' &&
+                    (arg.includes('/') || arg.includes('\\') || arg.includes('.'))) {
+                    // This looks like a file path, resolve it to absolute using user's working directory
+                    const userWorkingDir = process.env.USER_WORKING_DIR || process.cwd();
+                    arg = path.resolve(userWorkingDir, arg);
+                }
+                filteredArgs.push(arg);
             }
         }
         const binaryPath = this.extractEmbeddedBinary();
-        
         return new Promise((resolve, reject) => {
             const child = spawn(binaryPath, filteredArgs, {
                 stdio: 'inherit',
@@ -369,7 +394,6 @@ class PostmanGovernanceWrapper {
 
             // Check if this is a lint command with -r flag
             const shouldAddGovernance = this.shouldAddGovernanceReporting(args);
-
             if (!shouldAddGovernance) {
                 // Just pass through to postman CLI
                 await this.executePostmanCli(args);
