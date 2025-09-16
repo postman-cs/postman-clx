@@ -1,4 +1,4 @@
-# Postman CLX - Postman CLI + Governance Reporers
+# Postman CLX - An Enhanced Postman CLI *with Governance Reporers!*
 
 ![Demo](demo.gif)
 
