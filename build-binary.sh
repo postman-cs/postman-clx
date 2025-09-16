@@ -237,10 +237,10 @@ main() {
         fi
 
         # Build with Rust
-        echo "   Running: cargo build --release --target $rust_target --bin postman-enhanced"
-        if cargo build --release --target "$rust_target" --bin postman-enhanced; then
+        echo "   Running: cargo build --release --target $rust_target --bin postman-clx"
+        if cargo build --release --target "$rust_target" --bin postman-clx; then
             # Copy the built binary to dist
-            local built_binary_name="postman-enhanced"
+            local built_binary_name="postman-clx"
             if [[ "$arch" == "win64" ]]; then
                 built_binary_name="${built_binary_name}.exe"
             fi

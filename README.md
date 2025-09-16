@@ -1,4 +1,6 @@
-# Enhanced Postman CLI with Governance Reporting
+# Postman CLX - An Enhanced Postman CLI with Governance Reporers
+
+![Demo](demo.gif)
 
 Drop-in replacement for Postman CLI that adds comprehensive governance reporting. Add `-r json` or `-r html` to any lint command for detailed analysis beyond standard CLI output.
 
