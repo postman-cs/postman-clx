@@ -1,0 +1,13 @@
+# Build artifacts
+embedded/
+temp/
+target/
+dist/
+archive/
+
+# Governance reports
+governance-report-*.html
+CLA*.md
+
+# macOS
+.DS_Store

@@ -1,0 +1,15 @@
+[package]
+name = "postman-enhanced"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "postman-enhanced"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+tempfile = "3.8"
+which = "4.4"
+
+[build-dependencies]
