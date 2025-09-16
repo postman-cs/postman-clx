@@ -5,8 +5,11 @@ Drop-in replacement for the Postman CLI that adds comprehensive API governance a
 ## Quick Start
 
 ```bash
-# Install (coming soon - installation scripts in development)
-curl -sSL https://install.postman-clx.dev | sh
+# Install (Unix/Linux/macOS)
+curl -sSL https://raw.githubusercontent.com/postman-cs/postman-clx/master/install.sh | bash
+
+# Install (Windows PowerShell)
+iwr -useb https://raw.githubusercontent.com/postman-cs/postman-clx/master/install.ps1 | iex
 
 # Analyze API specs in a directory
 postman-clx api lint -d ./specs -r html
@@ -109,14 +112,37 @@ The `-r` flag only affects lint commands. Everything else operates as standard P
 
 ## Installation and Distribution
 
-This project builds enhanced binaries that embed the original Postman CLI with governance analysis capabilities:
+### Automated Installation
 
-- **pm-clx-linux64** - Linux x86_64
-- **pm-clx-osx_64** - macOS Intel
-- **pm-clx-osx_arm64** - macOS Apple Silicon (M1/M2/M3)
-- **pm-clx-win64.exe** - Windows x86_64
+**Unix/Linux/macOS:**
+```bash
+curl -sSL https://raw.githubusercontent.com/postman-cs/postman-clx/master/install.sh | bash
+```
 
-Both stable and canary channel versions are supported. Installation scripts automatically detect platform and configure the `postman-clx` alias.
+**Windows PowerShell:**
+```powershell
+iwr -useb https://raw.githubusercontent.com/postman-cs/postman-clx/master/install.ps1 | iex
+```
+
+Installation scripts automatically detect platform, download the appropriate compressed binary, extract it, and install to system PATH as `postman-clx`.
+
+### Manual Download
+
+Pre-built binaries are available as [GitHub releases](https://github.com/postman-cs/postman-clx/releases):
+
+**Stable Channel:**
+- **pm-clx-linux64.tar.gz** - Linux x86_64 (~32MB)
+- **pm-clx-osx_64.zip** - macOS Intel (~30MB)
+- **pm-clx-osx_arm64.zip** - macOS Apple Silicon (~28MB)
+- **pm-clx-win64.zip** - Windows x86_64 (~27MB)
+
+**Canary Channel:**
+- **pm-clx-linux64-canary.tar.gz** - Beta features (~32MB)
+- **pm-clx-osx_64-canary.zip** - Beta features (~30MB)
+- **pm-clx-osx_arm64-canary.zip** - Beta features (~29MB)
+- **pm-clx-win64-canary.zip** - Beta features (~27MB)
+
+Extract and place the binary in your PATH as `postman-clx`.
 
 ## Development Setup
 
@@ -159,6 +185,9 @@ Reports are generated in the working directory with timestamped filenames. The w
 ### CI/CD Pipelines
 ```yaml
 # Example GitHub Actions workflow
+- name: Install Enhanced Postman CLI
+  run: curl -sSL https://raw.githubusercontent.com/postman-cs/postman-clx/master/install.sh | bash
+
 - name: API Governance Check
   run: |
     postman-clx api lint -d ./specs -r json
