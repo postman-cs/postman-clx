@@ -6,7 +6,7 @@ Drop-in replacement for Postman CLI that adds useful governance reporting. Add `
 
 Runnable on single specs or entire directories and workspaces for comprehensive multi-API reporting (the HTML reports are pretty, too).
 
-Adapted from the ADO Pipelines and Github Actions Workflows [here](https://github.com/postman-cs/governance-demo), now just natively integrated.
+Adapted from the ADO Pipelines and Github Actions Workflows [here](https://github.com/postman-cs/governance-demo), now just natively integrated into a single CLI binary via Rust.
 
 ## Installation
 
@@ -48,7 +48,7 @@ Complete backward compatibility with existing Postman CLI workflows. Only lint c
 
 ## Manual Installation
 
-[GitHub releases](https://github.com/postman-cs/postman-clx/releases) provide pre-built compressed binaries for all platforms. Stable and canary channels available.
+[GitHub releases](https://github.com/postman-cs/postman-clx/releases) for pre-built compressed binaries for all platforms. Both stable and canary channels available.
 
 ## Building from Source
 
